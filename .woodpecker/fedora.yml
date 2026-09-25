@@ -1,0 +1,83 @@
+when:
+  - event: tag
+    ref: refs/tags/fedora-v*
+  - event: manual
+    branch: main
+
+labels:
+  role: build
+  platform: linux/amd64
+
+concurrency: 1
+
+steps:
+  - name: build-fedora-appimage
+    image: fedora:44
+    commands:
+      - |
+        bash <<'BASH'
+        set -euo pipefail
+
+        version=$(sed -n 's/^set(SoftFever_VERSION "\([^"]*\)")$/\1/p' version.inc)
+        test -n "$version"
+        if [[ "$CI_PIPELINE_EVENT" == tag ]]; then
+          prefix="fedora-v$${version}-beta."
+          if [[ -z "$version" || "$CI_COMMIT_TAG" != "$prefix"* || ! "$${CI_COMMIT_TAG#"$prefix"}" =~ ^[0-9]+$ ]]; then
+            echo "Expected tag: $${prefix}<number>" >&2
+            exit 1
+          fi
+          release_tag="$CI_COMMIT_TAG"
+        elif [[ "$CI_PIPELINE_EVENT" == manual && "$CI_COMMIT_REF" == refs/heads/main ]]; then
+          release_tag="fedora-dev-$${CI_COMMIT_SHA:0:12}-$${CI_PIPELINE_NUMBER}"
+        else
+          echo "Only Fedora release tags and manual main builds are allowed" >&2
+          exit 1
+        fi
+
+        dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm"
+        source scripts/linux.d/fedora
+        dnf install -y "$${REQUIRED_DEV_PACKAGES[@]}" procps-ng binutils
+
+        CMAKE_BUILD_PARALLEL_LEVEL=2 ./build_linux.sh -dsi -j 2
+        artifact="OrcaSlicer_$${release_tag}_Fedora44_x86_64.AppImage"
+        test -s "build/OrcaSlicer_Linux_V$${version}.AppImage"
+        mv "build/OrcaSlicer_Linux_V$${version}.AppImage" "build/$artifact"
+        (cd build && sha256sum "$artifact" > SHA256SUMS)
+        printf '%s\n' "$release_tag" > build/FEDORA_RELEASE_TAG
+        BASH
+
+  - name: draft-tagged-release
+    image: woodpeckerci/plugin-release:0.3.1
+    when:
+      - event: tag
+    settings:
+      api_key:
+        from_secret: github_release_token
+      files:
+        - build/OrcaSlicer_fedora-v*_Fedora44_x86_64.AppImage
+        - build/SHA256SUMS
+      file_exists: fail
+      draft: true
+      prerelease: true
+
+  - name: draft-manual-dev-release
+    image: fedora:44
+    when:
+      - event: manual
+        branch: main
+    environment:
+      GH_TOKEN:
+        from_secret: github_release_token
+    commands:
+      - |
+        bash <<'BASH'
+        set -euo pipefail
+        dnf install -y gh
+        release_tag=$(cat build/FEDORA_RELEASE_TAG)
+        gh release create "$release_tag" \
+          build/OrcaSlicer_fedora-dev-*_Fedora44_x86_64.AppImage build/SHA256SUMS \
+          --repo rembomy/OrcaSlicer --target "$CI_COMMIT_SHA" \
+          --title "OrcaSlicer Fedora 44 dev $${CI_COMMIT_SHA:0:12}" \
+          --notes "Manual Fedora 44 build from main at $CI_COMMIT_SHA." \
+          --draft --prerelease
+        BASH

@@ -361,6 +361,12 @@ export APPDIR="\${APPDIR:-\$DIR}"
 # 1) OrcaSlicer will segfault on systems where locale info is not as expected (i.e. Holo-ISO arch-based distro)
 export LC_ALL=C
 
+if [ -z "\${GTK_THEME+x}" ] && command -v gsettings >/dev/null 2>&1; then
+    if [ "\$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null)" = "'Adwaita-dark'" ]; then
+        export GTK_THEME=Adwaita:dark
+    fi
+fi
+
 if [ "\$XDG_SESSION_TYPE" = "wayland" ] && [ "\$ZINK_DISABLE_OVERRIDE" != "1" ]; then
     if command -v glxinfo >/dev/null 2>&1; then
         RENDERER=\$(glxinfo | grep "OpenGL renderer string:" | sed 's/.*: //')

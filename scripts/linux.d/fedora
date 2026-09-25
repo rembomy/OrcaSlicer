@@ -19,21 +19,23 @@ REQUIRED_DEV_PACKAGES=(
     libmspack-devel
     libquadmath-devel
     libsecret-devel
+    libsoup3-devel
     libspnav-devel
     libtool
     m4
     mesa-libGLU-devel
+    mesa-compat-libOSMesa-devel
     ninja-build
     openssl-devel
     perl-FindBin
     texinfo
     wayland-protocols-devel
     webkit2gtk4.1-devel
-    wget
+    wget2-wget
     libcurl-devel
 )
 
-if [[ -n "$UPDATE_LIB" ]]
+if [[ -n "${UPDATE_LIB:-}" ]]
 then
     NEEDED_PKGS=()
     for PKG in "${REQUIRED_DEV_PACKAGES[@]}"; do
