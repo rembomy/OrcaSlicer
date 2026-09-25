@@ -1228,6 +1228,10 @@ int CLI::run(int argc, char **argv)
     save_main_thread_id();
 
 #ifdef __WXGTK__
+    // NVIDIA's DMA-BUF renderer can leave WebKit views blank.
+    if (::access("/proc/driver/nvidia/version", F_OK) == 0)
+        ::setenv("WEBKIT_DISABLE_DMABUF_RENDERER", "1", /* replace */ false);
+
     // ------------------------------------------------------------------
     // Linux backend selection — runtime, based on GDK_BACKEND env var.
     //

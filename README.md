@@ -191,6 +191,14 @@ AppImages are published for both **x86_64** and **aarch64** (ARM64). Pick the fi
  3. If you run into trouble executing it, try this command in the terminal:
     `chmod +x /path_to_appimage/OrcaSlicer_Linux.AppImage`
 
+### Fedora 44 builds
+
+On Fedora 44, install the development packages in `scripts/linux.d/fedora`, then run `./build_linux.sh -dsi -j 2` to build an AppImage. The result is `build/OrcaSlicer_Linux_V<version>.AppImage`. For a separate test profile, launch it with `--datadir "$HOME/.config/OrcaSlicer-fedora-test"`; copy your regular profile there first if you want to test existing presets.
+
+The Woodpecker Fedora workflow builds only tags shaped `fedora-v<SoftFever_VERSION>-beta.<number>` and manual runs selected on `main`. The tag must point to source whose `version.inc` has the matching `SoftFever_VERSION`. To build an upstream stable release, check out its upstream tag on a release branch, apply the Fedora fixes, then create a new annotated Fedora beta tag on that commit. For example, if the source version is `2.4.2`, use `fedora-v2.4.2-beta.1`. Push that branch and tag to this fork to trigger the build. The workflow creates a draft prerelease in this fork with an AppImage and SHA256SUMS.
+
+For a development build, choose the `main` branch and manually start the Fedora workflow in Woodpecker. It creates a draft prerelease tagged `fedora-dev-<commit>-<pipeline number>`, so each build identifies the exact main commit. Both release paths require the `github_release_token` Woodpecker secret with permission to create releases and tags in this fork and a Linux amd64 build agent. No ordinary push to `main` starts a Fedora build.
+
 # How to Compile
 
 All updated build instructions for Windows, macOS, and Linux are now available on the official [OrcaSlicer Wiki - How to build](https://www.orcaslicer.com/wiki/how_to_build) page.

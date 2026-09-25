@@ -45,6 +45,9 @@ if (SLIC3R_GUI)
         include(${wxWidgets_USE_FILE})
     endif()
 
+    # wx-config may report a bare archive when zlib was installed in lib64.
+    list(TRANSFORM wxWidgets_LIBRARIES REPLACE "^libzlibstatic[.]a$" "${ZLIB_LIBRARIES}")
+
     if(APPLE AND TARGET wx::wxgl)
         # Newer wxWidgets CMake exports may inject the macOS OpenGL framework
         # as a quoted file path inside wx::wxgl, which Ninja then treats as a
