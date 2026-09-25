@@ -28,7 +28,7 @@ steps:
           fi
           release_tag="$CI_COMMIT_TAG"
         elif [[ "$CI_PIPELINE_EVENT" == manual && "$CI_COMMIT_REF" == refs/heads/main ]]; then
-          release_tag="fedora-dev-$${CI_COMMIT_SHA:0:12}-$${CI_PIPELINE_NUMBER}"
+          release_tag="fedora-dev-$${version}-$${CI_COMMIT_SHA:0:12}-$${CI_PIPELINE_NUMBER}"
         else
           echo "Only Fedora release tags and manual main builds are allowed" >&2
           exit 1

@@ -197,7 +197,9 @@ On Fedora 44, install the development packages in `scripts/linux.d/fedora`, then
 
 The Woodpecker Fedora workflow builds only tags shaped `fedora-v<SoftFever_VERSION>-beta.<number>` and manual runs selected on `main`. The tag must point to source whose `version.inc` has the matching `SoftFever_VERSION`. To build an upstream stable release, check out its upstream tag on a release branch, apply the Fedora fixes, then create a new annotated Fedora beta tag on that commit. For example, if the source version is `2.4.2`, use `fedora-v2.4.2-beta.1`. Push that branch and tag to this fork to trigger the build. The workflow creates a draft prerelease in this fork with an AppImage and SHA256SUMS.
 
-For a development build, choose the `main` branch and manually start the Fedora workflow in Woodpecker. It creates a draft prerelease tagged `fedora-dev-<commit>-<pipeline number>`, so each build identifies the exact main commit. Both release paths require the `github_release_token` Woodpecker secret with permission to create releases and tags in this fork and a Linux amd64 build agent. No ordinary push to `main` starts a Fedora build.
+For a development build, open the OrcaSlicer repository in Woodpecker, start a new pipeline, and select the `main` branch. The `fedora.yml` workflow runs for that manual event. It creates a draft prerelease tagged `fedora-dev-<SoftFever_VERSION>-<commit>-<pipeline number>`; on the current main source this begins with `fedora-dev-2.5.0-dev-`. Check the pipeline result, then find the draft under this fork's GitHub Releases and verify the downloaded AppImage with `sha256sum -c SHA256SUMS` in the download directory. To keep development settings separate, run the AppImage with `--datadir "$HOME/.config/OrcaSlicer-fedora-test"`.
+
+Both release paths require the `github_release_token` Woodpecker secret with permission to create releases and tags in this fork and a Linux amd64 build agent. No ordinary push to `main` starts a Fedora build.
 
 # How to Compile
 
